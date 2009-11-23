@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SynchronizationDetails.cs" />
     <Compile Include="ThreadPoolCallbacker.cs" />
     <Compile Include="Synchronizer.cs" />
     <Compile Include="ThreadPoolMethod.cs" />

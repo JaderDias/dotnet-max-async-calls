@@ -96,40 +96,28 @@ namespace ParallelizerTest
                 .ToArray();
         }
 
-        class SynchronizationDetails<T>
-        {
-            public AsyncCallbackSynchronizer<T> AsyncCallbackSynchronizer { get; set; }
-            public string Url { get; set; }
-            public Func<AsyncCallback, string, IAsyncResult> Begin { get; set; }
-        }
-
         [TestMethod()]
         public void ExecuteTest2()
         {
             var urls = new string[]
             {
-                "http://google.com",
-                "http://microsoft.com"
+                "http://www.google.com.br/",
+                "http://www.microsoft.com/"
             };
+            urls = urls.Concat(urls).Concat(urls).Concat(urls).Concat(urls).Concat(urls).Concat(urls).Concat(urls).ToArray();
             var asyncCallbackSynchronizer = new AsyncCallbackSynchronizer<string>();
             Func<AsyncCallback, string, IAsyncResult> begin = delegate(AsyncCallback callback, string url)
             {
                 var request = HttpWebRequest.Create(url);
                 return request.BeginGetResponse(callback, request);
             };
-            Func<SynchronizationDetails<string>, IAsyncResult> func2 = delegate(SynchronizationDetails<string> synchronizationDetails)
-            {
-                return synchronizationDetails.AsyncCallbackSynchronizer.Execute(
-                    synchronizationDetails.Begin,
-                    synchronizationDetails.Url);
-            };
             var synchronizer = new Synchronizer<IEnumerable<IAsyncResult>>();
-            var callbacker = new ThreadPoolCallbacker<SynchronizationDetails<string>, IAsyncResult>(func2);
+            var callbacker = new ThreadPoolCallbacker<SynchronizationDetails<string>, IAsyncResult>(SynchronizationDetails<string>.Execute);
             foreach (var url in urls)
             {
                 var synchronizationDetails = new SynchronizationDetails<string>
                 {
-                    Url = url,
+                    Argument = url,
                     Begin = begin,
                     AsyncCallbackSynchronizer = asyncCallbackSynchronizer
                 };
