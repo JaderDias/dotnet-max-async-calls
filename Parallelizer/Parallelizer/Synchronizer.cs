@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Parallelizer
 {
-    public class Synchronizer<T>
+    public class AsyncCallbackSynchronizer<T>
     {
         AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
         IAsyncResult _result;
@@ -25,7 +25,7 @@ namespace Parallelizer
         }
     }
 
-    public class Synchronizer2<T>
+    public class Synchronizer<T>
     {
         AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
         T _result;
