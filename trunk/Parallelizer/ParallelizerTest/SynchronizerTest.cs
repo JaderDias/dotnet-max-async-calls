@@ -73,7 +73,7 @@ namespace ParallelizerTest
         [TestMethod()]
         public void ExecuteTest()
         {
-            var target = new Synchronizer<object>();
+            var target = new AsyncCallbackSynchronizer<object>();
             var request = HttpWebRequest.Create("http://www.google.com");
             IAsyncResult actual = target.Execute(request.BeginGetResponse, null);
         }
@@ -84,7 +84,7 @@ namespace ParallelizerTest
         [TestMethod()]
         public void ExecuteTest1()
         {
-            var target = new Synchronizer2<IEnumerable<double>>();
+            var target = new Synchronizer<IEnumerable<double>>();
             Func<int, double> func = a => Math.Sqrt((double)a);
             var callbacker = new ThreadPoolCallbacker<int, double>(func);
             var arguments = Enumerable.Range(0, 10);
