@@ -12,12 +12,9 @@ namespace Parallelizer
         int _enqueuedItemCount = 0;
         Action<IEnumerable<TResult>> _callback;
         Func<T, TResult> _func;
-        bool _callbackAuthorized = false;
 
-        public ThreadPoolCallbacker(Action<IEnumerable<TResult>> callback,
-            Func<T, TResult> func)
+        public ThreadPoolCallbacker(Func<T, TResult> func)
         {
-            _callback = callback;
             _func = func;
         }
 
@@ -27,18 +24,19 @@ namespace Parallelizer
             ThreadPool.QueueUserWorkItem(ItemCallback, argument);
         }
 
-        public void AuthorizeCallback()
+        public void EnableCallback(Action<IEnumerable<TResult>> callback)
         {
             lock (_results)
             {
-                _callbackAuthorized = true;
-                CallbackIfCompleted();
+                _callback = callback;
+                TryCallback();
             }
         }
 
-        void CallbackIfCompleted()
+        void TryCallback()
         {
-            if (_results.Count == _enqueuedItemCount)
+            if (!ReferenceEquals(null, _callback) &&
+                _results.Count == _enqueuedItemCount)
             {
                 _callback(_results);
             }
@@ -50,10 +48,7 @@ namespace Parallelizer
             lock (_results)
             {
                 _results.Add(result);
-                if (_callbackAuthorized)
-                {
-                    CallbackIfCompleted();
-                }
+                TryCallback();
             }
         }
     }
