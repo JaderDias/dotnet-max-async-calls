@@ -96,35 +96,54 @@ namespace ParallelizerTest
                 .ToArray();
         }
 
+        class SynchronizationDetails<T>
+        {
+            public AsyncCallbackSynchronizer<T> AsyncCallbackSynchronizer { get; set; }
+            public string Url { get; set; }
+            public Func<AsyncCallback, string, IAsyncResult> Begin { get; set; }
+        }
+
         [TestMethod()]
         public void ExecuteTest2()
         {
-            //var urls = new string[]
-            //{
-            //    "http://google.com",
-            //    "http://stackoverflow.com"
-            //};
-            //foreach (var url in urls)
-            //{
-            //    var request = HttpWebRequest.Create(url);
-            //    ThreadPool.QueueUserWorkItem(delegate(object arg)
-            //    {
-            //        request.BeginGetResponse(delegate(IAsyncResult ar)
-            //        {
-
-            //        }, null
-            //    }, null);
-
-
-            //    var synchronizer = new Synchronizer<object>();
-            //    synchronizer.Execute(ThreadPool.QueueUserWorkItem(
-
-                //var synchronizer = new Synchronizer<object>();
-                //var result = synchronizer.Execute(request.BeginGetResponse, null);
-                //using (var response = request.EndGetResponse(result))
-                //{
-                //}
-            //}
+            var urls = new string[]
+            {
+                "http://google.com",
+                "http://microsoft.com"
+            };
+            var asyncCallbackSynchronizer = new AsyncCallbackSynchronizer<string>();
+            Func<AsyncCallback, string, IAsyncResult> begin = delegate(AsyncCallback callback, string url)
+            {
+                var request = HttpWebRequest.Create(url);
+                return request.BeginGetResponse(callback, request);
+            };
+            Func<SynchronizationDetails<string>, IAsyncResult> func2 = delegate(SynchronizationDetails<string> synchronizationDetails)
+            {
+                return synchronizationDetails.AsyncCallbackSynchronizer.Execute(
+                    synchronizationDetails.Begin,
+                    synchronizationDetails.Url);
+            };
+            var synchronizer = new Synchronizer<IEnumerable<IAsyncResult>>();
+            var callbacker = new ThreadPoolCallbacker<SynchronizationDetails<string>, IAsyncResult>(func2);
+            foreach (var url in urls)
+            {
+                var synchronizationDetails = new SynchronizationDetails<string>
+                {
+                    Url = url,
+                    Begin = begin,
+                    AsyncCallbackSynchronizer = asyncCallbackSynchronizer
+                };
+                callbacker.Queue(synchronizationDetails);
+            }
+            var results = synchronizer.Execute(callbacker.EnableCallback);
+            var reals = new List<string>();
+            foreach (var result in results)
+            {
+                using (var response = ((WebRequest)result.AsyncState).EndGetResponse(result))
+                {
+                    reals.Add(response.ResponseUri.AbsoluteUri);
+                }
+            }
         }
     }
 }
