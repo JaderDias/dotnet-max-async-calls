@@ -78,13 +78,13 @@ namespace ParallelizerTest
 //                MessageBox.Show(String.Join(";", results.Select(a => a.ToString()).ToArray()));
             };
             Func<int, double> func = a => Math.Sqrt((double)a);
-            var target = new ThreadPoolCallbacker<int, double>(callback, func);
+            var target = new ThreadPoolCallbacker<int, double>(func);
             var arguments = Enumerable.Range(0, 10);
             foreach (var argument in arguments)
             {
                 target.Queue(argument);
             }
-            target.AuthorizeCallback();
+            target.EnableCallback(callback);
 //            MessageBox.Show(" ");
         }
     }

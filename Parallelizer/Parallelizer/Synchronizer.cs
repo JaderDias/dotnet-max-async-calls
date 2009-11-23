@@ -24,4 +24,23 @@ namespace Parallelizer
             _autoResetEvent.Set();
         }
     }
+
+    public class Synchronizer2<T>
+    {
+        AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
+        T _result;
+
+        public T Execute(Action<Action<T>> beginMethod)
+        {
+            beginMethod(Callback);
+            _autoResetEvent.WaitOne();
+            return _result;
+        }
+
+        void Callback(T result)
+        {
+            _result = result;
+            _autoResetEvent.Set();
+        }
+    }
 }

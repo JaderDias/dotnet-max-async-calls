@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Net;
 using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ParallelizerTest
 {
@@ -76,30 +78,22 @@ namespace ParallelizerTest
             IAsyncResult actual = target.Execute(request.BeginGetResponse, null);
         }
 
-        double _result;
-
-        public void UnencapsulatedQueueing()
-        {
-            var autoResetEvent = new AutoResetEvent(false);
-            WaitCallback method = delegate(object state)
-            {
-                _result = Math.Sqrt((double)state);
-                autoResetEvent.Set();
-            };
-
-            ThreadPool.QueueUserWorkItem(method, 4d);
-            autoResetEvent.WaitOne();
-        }
-
         /// <summary>
         ///A test for Execute
         ///</summary>
         [TestMethod()]
         public void ExecuteTest1()
         {
-            var target = new Synchronizer<object>();
-            var request = HttpWebRequest.Create("http://www.google.com");
-            IAsyncResult actual = target.Execute(request.BeginGetResponse, null);
+            var target = new Synchronizer2<IEnumerable<double>>();
+            Func<int, double> func = a => Math.Sqrt((double)a);
+            var callbacker = new ThreadPoolCallbacker<int, double>(func);
+            var arguments = Enumerable.Range(0, 10);
+            foreach (var argument in arguments)
+            {
+                callbacker.Queue(argument);
+            }
+            var result = target.Execute(callbacker.EnableCallback)
+                .ToArray();
         }
 
         [TestMethod()]
